@@ -1,0 +1,70 @@
+version: "3.7"
+
+services:
+  service-registry:
+    build: ./service-registry
+    ports:
+      - 8761:8761
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - 8765:8765
+    depends_on:
+      service-registry:
+        condition: service_healthy
+    environment:
+      eureka.client.serviceUrl.defaultZone: http://service-registry:8761/eureka/
+      eureka.client.register-with-eureka: "true"
+
+  question-service:
+    build: ./question-service
+    ports:
+      - 8080:8080
+    depends_on:
+      - service-registry
+      - question-service-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://question-service-db:5432/questiondb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      eureka.client.serviceUrl.defaultZone: http://service-registry:8761/eureka/
+      eureka.client.register-with-eureka: "true"
+
+  quiz-service:
+    build: ./quiz-service
+    ports:
+      - 8090:8090
+    depends_on:
+      - service-registry
+      - quiz-service-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://quiz-service-db:5432/quizdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      eureka.client.serviceUrl.defaultZone: http://service-registry:8761/eureka/
+      eureka.client.register-with-eureka: "true"
+
+  question-service-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: questiondb
+    ports:
+      - 5432:5432
+
+  quiz-service-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: quizdb
+    ports:
+      - 5433:5432

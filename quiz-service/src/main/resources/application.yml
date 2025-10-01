@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: quiz-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quizdb
+    username: postgres
+    password: '12345'
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  sql:
+    init:
+      mode: always
+      platform: postgres
+  cloud:
+    function:
+      definition: updateQuizQuestions
+    stream:
+      bindings:
+        notifyAddNewQuiz-out-0:
+          destination: add-new-quiz
+        updateQuizQuestions-in-0:
+          destination: question-set-generated
+      kafka:
+        binder:
+          brokers:
+            - localhost:9092
+
+eureka:
+  instance:
+    preferIpAddress: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+h2:
+  console:
+    enabled: true
+
+server:
+  port: 8090
