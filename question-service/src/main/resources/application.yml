@@ -23,14 +23,14 @@ spring:
     stream:
       bindings:
         generateQuestionSet-in-0:
-          destination: add-new-quiz
+          destination: ADD-NEW-QUIZ
           group: ${spring.application.name}
         notifyQuestionSetGenerated-out-0:
-          destination: question-set-generated
+          destination: QUESTION-SET-GENERATED
       kafka:
         binder:
           brokers:
-            - localhost:9092
+            - kafka:9092
 h2:
   console:
     enabled: true

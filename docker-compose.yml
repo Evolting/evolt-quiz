@@ -1,8 +1,7 @@
-version: "3.7"
-
 services:
   service-registry:
-    build: ./service-registry
+    image: service-registry:v1
+    container_name: service-registry
     ports:
       - 8761:8761
     healthcheck:
@@ -11,9 +10,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    environment:
+      eureka.instance.hostname: service-registry
+      eureka.client.fetch-registry: "false"
+      eureka.client.register-with-eureka: "false"
 
   api-gateway:
-    build: ./api-gateway
+    image: api-gateway:v1
+    container_name: api-gateway
     ports:
       - 8765:8765
     depends_on:
@@ -24,35 +28,76 @@ services:
       eureka.client.register-with-eureka: "true"
 
   question-service:
-    build: ./question-service
+    image: question-service:v1
+    container_name: question-service
     ports:
       - 8080:8080
     depends_on:
-      - service-registry
-      - question-service-db
+      service-registry:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      question-service-db:
+        condition: service_started
     environment:
+      # Database Configuration
       SPRING_DATASOURCE_URL: jdbc:postgresql://question-service-db:5432/questiondb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
+
+      # Eureka/Service Registry Configuration
       eureka.client.serviceUrl.defaultZone: http://service-registry:8761/eureka/
-      eureka.client.register-with-eureka: "true"
+      eureka.client.registerWithEureka: "true"
+      eureka.client.fetchRegistry: "true"
+      eureka.instance.preferIpAddress: "true"
+
+      # Kafka/Cloud Stream Configuration
+      SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
+
+      # Application Name
+      SPRING_APPLICATION_NAME: question-service
 
   quiz-service:
-    build: ./quiz-service
+    image: quiz-service:v1
+    container_name: quiz-service
     ports:
       - 8090:8090
     depends_on:
-      - service-registry
-      - quiz-service-db
+      service-registry:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      quiz-service-db:
+        condition: service_started
     environment:
+      # Database Configuration
       SPRING_DATASOURCE_URL: jdbc:postgresql://quiz-service-db:5432/quizdb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
+
+      # Eureka/Service Registry Configuration
       eureka.client.serviceUrl.defaultZone: http://service-registry:8761/eureka/
-      eureka.client.register-with-eureka: "true"
+      eureka.client.registerWithEureka: "true"
+      eureka.client.fetchRegistry: "true"
+      eureka.instance.preferIpAddress: "true"
+
+      # Kafka/Cloud Stream Configuration
+      SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
+
+      # Application Name
+      SPRING_APPLICATION_NAME: quiz-service
 
   question-service-db:
-    image: postgres:latest
+    image: postgres:14-alpine
+    container_name: question-service-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
@@ -61,10 +106,45 @@ services:
       - 5432:5432
 
   quiz-service-db:
-    image: postgres:latest
+    image: postgres:14-alpine
+    container_name: quiz-service-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: quizdb
     ports:
       - 5433:5432
+
+  kafka:
+    image: apache/kafka:4.1.0
+    container_name: kafka
+    ports:
+      - 9092:9092
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c 'echo > /dev/tcp/localhost/9092'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      # KRaft settings
+      KAFKA_NODE_ID: 0
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      # Listeners
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,INTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://:9092,INTERNAL://:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "8069:8080"
+    restart: always
+    environment:
+      KAFKA_CLUSTERS_0_NAME: "kraft-cluster"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9094
+    depends_on:
+      - kafka
