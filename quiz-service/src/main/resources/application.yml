@@ -2,16 +2,16 @@ spring:
   application:
     name: quiz-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/quizdb
-    username: postgres
-    password: '12345'
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/quizdb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:12345}
   jpa:
     hibernate:
-      ddl-auto: create
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:create}
+    show-sql: ${SPRING_JPA_SHOW_SQL:true}
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: ${SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
   sql:
     init:
       mode: always
@@ -28,16 +28,17 @@ spring:
       kafka:
         binder:
           brokers:
-            - kafka:9092
+            - ${SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS:localhost:9092}
 
 eureka:
   instance:
-    preferIpAddress: true
+    preferIpAddress: ${eureka.instance.preferIpAddress:true}
   client:
-    fetchRegistry: true
-    registerWithEureka: true
+    fetchRegistry: ${eureka.client.fetchRegistry:true}
+    registerWithEureka: ${eureka.client.registerWithEureka:true}
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      # Docker Network: Uses service name from environment (e.g., from eureka.client.serviceUrl.defaultZone in docker-compose)
+      defaultZone: ${eureka.client.serviceUrl.defaultZone:http://localhost:8761/eureka/}
 
 h2:
   console:
