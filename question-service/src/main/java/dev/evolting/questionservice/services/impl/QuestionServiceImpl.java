@@ -1,6 +1,7 @@
 package dev.evolting.questionservice.services.impl;
 
 import dev.evolting.questionservice.dtos.QuestionDTO;
+import dev.evolting.questionservice.dtos.QuestionMsgDTO;
 import dev.evolting.questionservice.entities.Question;
 import dev.evolting.questionservice.entities.Response;
 import dev.evolting.questionservice.repositories.QuestionRepository;
@@ -67,15 +68,15 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Retry(name = "getQuestionsforQuiz", fallbackMethod = "getQuestionsforQuizFallback")
     @Override
-    public List<Integer> getQuestionsforQuiz(String category, Integer numQ) {
+    public List<Integer> getQuestionsforQuiz(Integer id, String category, Integer numQ) {
         List<Integer> questionIds = questionRepository.findRandomQuestionsByCategory(category, numQ);
 
-        notifyQuestionSetGenerated(questionIds);
+        notifyQuestionSetGenerated(new QuestionMsgDTO(id, questionIds));
 
         return questionIds;
     }
 
-    public List<Integer> getQuestionsforQuizFallback(String category, Integer numQ, Throwable throwable) {
+    public List<Integer> getQuestionsforQuizFallback(Integer id, String category, Integer numQ, Throwable throwable) {
         log.error("Error in getting questions for quiz", throwable);
 
         List<Integer> questionIds = new ArrayList<>(Arrays.asList(0, 0, 0, 0, 0));
@@ -83,9 +84,9 @@ public class QuestionServiceImpl implements QuestionService {
         return questionIds;
     }
 
-    private void notifyQuestionSetGenerated(List<Integer> questionIds) {
-        log.info("Notify generated question set with the details: {}", questionIds);
-        var result = streamBridge.send("notifyQuestionSetGenerated-out-0", questionIds);
+    private void notifyQuestionSetGenerated(QuestionMsgDTO questionMsgDTO) {
+        log.info("Notify generated question set with the details: {}", questionMsgDTO);
+        var result = streamBridge.send("notifyQuestionSetGenerated-out-0", questionMsgDTO);
         log.info("Is the sending Question set request successfully triggered ? : {}", result);
     }
 

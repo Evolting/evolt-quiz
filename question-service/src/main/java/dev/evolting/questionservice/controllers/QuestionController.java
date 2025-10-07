@@ -38,8 +38,8 @@ public class QuestionController {
     }
 
     @GetMapping("generate")
-    public ResponseEntity<List<Integer>> getQuestionsforQuiz(@RequestParam String categoryName, @RequestParam Integer numQ) {
-        return new ResponseEntity<>(questionService.getQuestionsforQuiz(categoryName, numQ), HttpStatus.OK);
+    public ResponseEntity<List<Integer>> getQuestionsforQuiz(@RequestParam Integer id, @RequestParam String categoryName, @RequestParam Integer numQ) {
+        return new ResponseEntity<>(questionService.getQuestionsforQuiz(id, categoryName, numQ), HttpStatus.OK);
     }
 
     @PostMapping("get-by-ids")

@@ -2,6 +2,7 @@ package dev.evolting.questionservice.functions;
 
 import dev.evolting.questionservice.dtos.QuestionDTO;
 import dev.evolting.questionservice.dtos.QuizDTO;
+import dev.evolting.questionservice.dtos.QuizMsgDTO;
 import dev.evolting.questionservice.services.QuestionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +25,11 @@ public class QuestionFunctions {
     }
 
     @Bean
-    public Consumer<QuizDTO> generateQuestionSet() {
-        return quizDTO -> {
-            log.info("Generate question set for quiz: " +  quizDTO.toString());
+    public Consumer<QuizMsgDTO> generateQuestionSet() {
+        return quizMsgDTO -> {
+            log.info("Generate question set for quiz: " +  quizMsgDTO.toString());
 
-            questionService.getQuestionsforQuiz(quizDTO.getCategory(), quizDTO.getNumQ());
+            questionService.getQuestionsforQuiz(quizMsgDTO.id(), quizMsgDTO.category(), quizMsgDTO.numQ());
         };
     }
 

@@ -1,5 +1,6 @@
 package dev.evolting.quizservice.functions;
 
+import dev.evolting.quizservice.dtos.QuestionMsgDTO;
 import dev.evolting.quizservice.services.QuizService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,16 +14,17 @@ import java.util.function.Consumer;
 public class QuizFunctions {
 
     private static final Logger log = LoggerFactory.getLogger(QuizFunctions.class);
-    private final QuizService questionService;
+    private final QuizService quizService;
 
-    public QuizFunctions(QuizService questionService) {
-        this.questionService = questionService;
+    public QuizFunctions(QuizService quizService) {
+        this.quizService = quizService;
     }
 
     @Bean
-    public Consumer<List<Integer>> updateQuizQuestions() {
-        return questionIds -> {
-            log.info("Adding these questions: {}", questionIds);
+    public Consumer<QuestionMsgDTO> updateQuizQuestions() {
+        return questionMsgDTO -> {
+            log.info("Adding these questions: {}", questionMsgDTO.toString());
+            quizService.updateQuizQuestions(questionMsgDTO.id(), questionMsgDTO.questionIds());
         };
     }
 

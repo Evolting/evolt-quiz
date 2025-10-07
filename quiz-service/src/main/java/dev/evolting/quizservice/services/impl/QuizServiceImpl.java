@@ -2,6 +2,7 @@ package dev.evolting.quizservice.services.impl;
 
 import dev.evolting.quizservice.dtos.QuestionDTO;
 import dev.evolting.quizservice.dtos.QuizDTO;
+import dev.evolting.quizservice.dtos.QuizMsgDTO;
 import dev.evolting.quizservice.entities.Quiz;
 import dev.evolting.quizservice.entities.Response;
 import dev.evolting.quizservice.feign.QuestionInterface;
@@ -53,23 +54,31 @@ public class QuizServiceImpl implements QuizService {
     public String addQuiz(String category, Integer numQ, String title) {
         Quiz quiz = new Quiz();
         quiz.setTitle(title);
-        quizRepository.save(quiz);
+        Quiz savedQuiz = quizRepository.save(quiz);
 
-        notifyAddNewQuiz(new QuizDTO(category, numQ, title));
+        notifyAddNewQuiz(new QuizMsgDTO(savedQuiz.getId(), category, numQ, title));
 
         return "Quiz Added Successfully";
     }
 
-    @Override
-    public String updateQuizQuestions(List<Integer> questionIds) {
-        log.info("Adding these questions: {}", questionIds);
-        return "Quiz Question set updated Successfully";
+    private void notifyAddNewQuiz(QuizMsgDTO quizMsgDTO) {
+        log.info("Notify adding new Quiz for the details: {}", quizMsgDTO);
+        var result = streamBridge.send("notifyAddNewQuiz-out-0", quizMsgDTO);
+        log.info("Is the adding new Quiz request successfully triggered ? : {}", result);
     }
 
-    private void notifyAddNewQuiz(QuizDTO quizDTO) {
-        log.info("Notify adding new Quiz for the details: {}", quizDTO);
-        var result = streamBridge.send("notifyAddNewQuiz-out-0", quizDTO);
-        log.info("Is the adding new Quiz request successfully triggered ? : {}", result);
+    @Override
+    public String updateQuizQuestions(Integer id, List<Integer> questionIds) {
+        log.info("Adding these questions: {}", questionIds);
+
+        Optional<Quiz> quiz = quizRepository.findById(id);
+        if (!quiz.isPresent()) {
+            return "Quiz not found";
+        }
+        quiz.get().setQuestionIds(questionIds);
+        quizRepository.save(quiz.get());
+
+        return "Quiz Question set updated Successfully";
     }
 
     @Override

@@ -11,7 +11,7 @@ public interface QuestionService {
     public List<Question> getAllQuestion();
     public List<Question> getQuestionsByCategory(String category);
     public String addQuestion(Question question);
-    public List<Integer> getQuestionsforQuiz(String category, Integer numQ);
+    public List<Integer> getQuestionsforQuiz(Integer id, String category, Integer numQ);
     List<QuestionDTO> getQuestionsByIds(List<Integer> questionIds);
     Integer getScore(List<Response> responses);
 }
