@@ -5,6 +5,7 @@ import dev.evolting.quizservice.dtos.QuizDTO;
 import dev.evolting.quizservice.entities.Quiz;
 import dev.evolting.quizservice.entities.Response;
 import dev.evolting.quizservice.services.QuizService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,9 +37,14 @@ public class QuizController {
         return new ResponseEntity<>(quizService.getQuizQuestions(id), org.springframework.http.HttpStatus.OK);
     }
 
+    @RateLimiter(name = "createQuiz", fallbackMethod = "createQuizFallback")
     @PostMapping
     public ResponseEntity<String> createQuiz(@RequestBody QuizDTO quizDTO){
         return new ResponseEntity<>(quizService.addQuiz(quizDTO.getCategory(), quizDTO.getNumQ(), quizDTO.getTitle()), HttpStatus.CREATED);
+    }
+
+    public ResponseEntity<String> createQuizFallback(QuizDTO quizDTO, Throwable throwable){
+        return new ResponseEntity<>("Please wait for a few seconds before adding more quiz", HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @PostMapping("submit")

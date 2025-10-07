@@ -21,7 +21,6 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
-    @RateLimiter(name = "getAllQuestion")
     @GetMapping("/all-question")
     public ResponseEntity<List<Question>> getAllQuestion() {
         return new ResponseEntity<>(questionService.getAllQuestion(), HttpStatus.OK);
@@ -32,9 +31,14 @@ public class QuestionController {
         return new ResponseEntity<>(questionService.getQuestionsByCategory(category), HttpStatus.OK);
     }
 
+    @RateLimiter(name = "addQuestion", fallbackMethod = "addQuestionFallback")
     @PostMapping
     public ResponseEntity<String> addQuestion(@RequestBody Question question) {
         return new ResponseEntity<>(questionService.addQuestion(question), HttpStatus.CREATED);
+    }
+
+    public ResponseEntity<String> addQuestionFallback(Question question, Throwable throwable) {
+        return new ResponseEntity<>("Please wait for a few seconds before adding more quiz", HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @GetMapping("generate")
