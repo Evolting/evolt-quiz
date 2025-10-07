@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: service-registry
+
+eureka:
+  instance:
+    preferIpAddress: true
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:service-registry}
+  client:
+    registerWithEureka: ${EUREKA_CLIENT_REGISTER_WITH_EUREKA:false}
+    fetchRegistry: ${EUREKA_CLIENT_FETCH_REGISTRY:false}
+
+server:
+  port: 8761
