@@ -5,15 +5,19 @@ import dev.evolting.questionservice.entities.Question;
 import dev.evolting.questionservice.entities.Response;
 import dev.evolting.questionservice.repositories.QuestionRepository;
 import dev.evolting.questionservice.services.QuestionService;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -26,45 +30,57 @@ public class QuestionServiceImpl implements QuestionService {
 
     private final StreamBridge streamBridge;
 
-    public ResponseEntity<List<Question>> getAllQuestion() {
+    @Cacheable(value = "questions", key = "'allQuestions'")
+    public List<Question> getAllQuestion() {
         try{
-            return new ResponseEntity<>(questionRepository.findAll(), HttpStatus.OK);
+            return questionRepository.findAll();
         } catch (Exception e){
             e.printStackTrace();
         }
-        return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
+        return new ArrayList<>();
     }
 
+    @Cacheable(value = "questions", key = "#category")
     @Override
-    public ResponseEntity<List<Question>> getQuestionsByCategory(String category) {
+    public List<Question> getQuestionsByCategory(String category) {
         try{
-            return new ResponseEntity<>(questionRepository.findQuestionsByCategory(category), HttpStatus.OK);
+            return questionRepository.findQuestionsByCategory(category);
         } catch (Exception e){
             e.printStackTrace();
         }
-        return new ResponseEntity<>(new ArrayList<>(), HttpStatus.BAD_REQUEST);
+        return new ArrayList<>();
     }
 
+    @CacheEvict(value = "questions", allEntries = true)
     @Override
-    public ResponseEntity<String> addQuestion(Question question) {
+    public String addQuestion(Question question) {
         try{
             Boolean isAdded = questionRepository.save(question) != null;
             return isAdded ?
-                    new ResponseEntity<>("Question Added Successfully", HttpStatus.CREATED)
-                    : new ResponseEntity<>("Question Not Added", HttpStatus.BAD_REQUEST);
+                    "Question Added Successfully"
+                    : "Question Not Added";
         } catch (Exception e){
             e.printStackTrace();
         }
-        return new ResponseEntity<>("Error", HttpStatus.BAD_REQUEST);
+        return "Error";
     }
 
+    @Retry(name = "getQuestionsforQuiz", fallbackMethod = "getQuestionsforQuizFallback")
     @Override
-    public ResponseEntity<List<Integer>> getQuestionsforQuiz(String category, Integer numQ) {
+    public List<Integer> getQuestionsforQuiz(String category, Integer numQ) {
         List<Integer> questionIds = questionRepository.findRandomQuestionsByCategory(category, numQ);
 
         notifyQuestionSetGenerated(questionIds);
 
-        return new ResponseEntity<>(questionIds, HttpStatus.OK);
+        return questionIds;
+    }
+
+    public List<Integer> getQuestionsforQuizFallback(String category, Integer numQ, Throwable throwable) {
+        log.error("Error in getting questions for quiz", throwable);
+
+        List<Integer> questionIds = new ArrayList<>(Arrays.asList(0, 0, 0, 0, 0));
+
+        return questionIds;
     }
 
     private void notifyQuestionSetGenerated(List<Integer> questionIds) {
@@ -74,7 +90,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public ResponseEntity<List<QuestionDTO>> getQuestionsByIds(List<Integer> questionIds) {
+    public List<QuestionDTO> getQuestionsByIds(List<Integer> questionIds) {
         List<QuestionDTO> questionDTOS = new ArrayList<>();
         for (Integer questionId : questionIds) {
             Question question = questionRepository.findById(questionId).get();
@@ -87,11 +103,11 @@ public class QuestionServiceImpl implements QuestionService {
             questionDTO.setOption4(question.getOption4());
             questionDTOS.add(questionDTO);
         }
-        return new ResponseEntity<>(questionDTOS, HttpStatus.OK);
+        return questionDTOS;
     }
 
     @Override
-    public ResponseEntity<Integer> getScore(List<Response> responses) {
+    public Integer getScore(List<Response> responses) {
         int rightAnswers = 0;
         for (Response response : responses) {
             Question question = questionRepository.findById(response.getId()).get();
@@ -99,6 +115,6 @@ public class QuestionServiceImpl implements QuestionService {
                 rightAnswers++;
             }
         }
-        return new ResponseEntity<>(rightAnswers, HttpStatus.OK);
+        return rightAnswers;
     }
 }

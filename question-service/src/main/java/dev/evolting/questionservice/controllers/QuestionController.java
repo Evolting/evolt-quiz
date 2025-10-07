@@ -4,6 +4,8 @@ import dev.evolting.questionservice.dtos.QuestionDTO;
 import dev.evolting.questionservice.entities.Question;
 import dev.evolting.questionservice.entities.Response;
 import dev.evolting.questionservice.services.QuestionService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,33 +21,34 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
+    @RateLimiter(name = "getAllQuestion")
     @GetMapping("/all-question")
     public ResponseEntity<List<Question>> getAllQuestion() {
-        return questionService.getAllQuestion();
+        return new ResponseEntity<>(questionService.getAllQuestion(), HttpStatus.OK);
     }
 
     @GetMapping("/all-question/{category}")
     public ResponseEntity<List<Question>> getQuestionsByCategory(@PathVariable String category) {
-        return questionService.getQuestionsByCategory(category);
+        return new ResponseEntity<>(questionService.getQuestionsByCategory(category), HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<String> addQuestion(@RequestBody Question question) {
-        return questionService.addQuestion(question);
+        return new ResponseEntity<>(questionService.addQuestion(question), HttpStatus.CREATED);
     }
 
     @GetMapping("generate")
     public ResponseEntity<List<Integer>> getQuestionsforQuiz(@RequestParam String categoryName, @RequestParam Integer numQ) {
-        return questionService.getQuestionsforQuiz(categoryName, numQ);
+        return new ResponseEntity<>(questionService.getQuestionsforQuiz(categoryName, numQ), HttpStatus.OK);
     }
 
     @PostMapping("get-by-ids")
     public ResponseEntity<List<QuestionDTO>> getQuestionsByIds(@RequestBody List<Integer> questionIds) {
-        return questionService.getQuestionsByIds(questionIds);
+        return new ResponseEntity<>(questionService.getQuestionsByIds(questionIds), HttpStatus.OK);
     }
 
     @PostMapping("get-score")
     public ResponseEntity<Integer> getScore(@RequestBody List<Response> responses) {
-        return questionService.getScore(responses);
+        return new ResponseEntity<>(questionService.getScore(responses), HttpStatus.OK);
     }
 }

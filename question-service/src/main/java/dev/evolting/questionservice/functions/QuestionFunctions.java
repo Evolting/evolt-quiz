@@ -28,7 +28,7 @@ public class QuestionFunctions {
         return quizDTO -> {
             log.info("Generate question set for quiz: " +  quizDTO.toString());
 
-            questionService.getQuestionsforQuiz(quizDTO.getCategory(), quizDTO.getNumQ()).getBody();
+            questionService.getQuestionsforQuiz(quizDTO.getCategory(), quizDTO.getNumQ());
         };
     }
 

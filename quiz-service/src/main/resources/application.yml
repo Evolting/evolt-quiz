@@ -4,7 +4,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/quizdb}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:12345}
+    password: ${SPRING_DATASOURCE_PASSWORD:1234}
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:create}
@@ -32,13 +32,12 @@ spring:
 
 eureka:
   instance:
-    preferIpAddress: ${eureka.instance.preferIpAddress:true}
+    preferIpAddress: true
   client:
-    fetchRegistry: ${eureka.client.fetchRegistry:true}
-    registerWithEureka: ${eureka.client.registerWithEureka:true}
+    fetchRegistry: true
+    registerWithEureka: true
     serviceUrl:
-      # Docker Network: Uses service name from environment (e.g., from eureka.client.serviceUrl.defaultZone in docker-compose)
-      defaultZone: ${eureka.client.serviceUrl.defaultZone:http://localhost:8761/eureka/}
+      defaultZone: http://localhost:8761/eureka/
 
 h2:
   console:
@@ -46,3 +45,20 @@ h2:
 
 server:
   port: 8090
+
+resilience4j:
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 1000
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+  ratelimiter:
+    configs:
+      default:
+        timeout-duration:
+          seconds: 1
+        limit-refresh-period:
+          seconds: 5
+        limit-for-period: 1
