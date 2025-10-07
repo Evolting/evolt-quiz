@@ -10,6 +10,8 @@ import dev.evolting.quizservice.services.QuizService;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,20 +32,23 @@ public class QuizServiceImpl implements QuizService {
 
     private final StreamBridge  streamBridge;
 
+    @Cacheable(value = "quiz", key = "'allQuizzes'")
     @Override
     public List<Quiz> getAllQuiz() {
         return quizRepository.findAll();
     }
 
+    @Cacheable(value = "quiz", key = "#id")
     @Override
     public Quiz getQuizById(Integer id) {
         Optional<Quiz> quiz = quizRepository.findById(id);
         if (!quiz.isPresent()) {
             return null;
         }
-        else return quiz.get();
+        return quiz.get();
     }
 
+    @CacheEvict(value = "quiz", key = "'allQuizzes'")
     @Override
     public String addQuiz(String category, Integer numQ, String title) {
         Quiz quiz = new Quiz();

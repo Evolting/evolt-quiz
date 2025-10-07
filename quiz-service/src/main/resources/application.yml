@@ -29,6 +29,10 @@ spring:
         binder:
           brokers:
             - ${SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS:localhost:9092}
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 eureka:
   instance:
