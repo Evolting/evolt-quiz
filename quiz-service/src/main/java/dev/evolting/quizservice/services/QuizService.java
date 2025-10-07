@@ -8,10 +8,10 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 public interface QuizService {
-    ResponseEntity<List<Quiz>> getAllQuiz();
-    ResponseEntity<Quiz> getQuizById(Integer id);
-    ResponseEntity<String> addQuiz(String category, Integer numQ, String title);
-    ResponseEntity<String> updateQuizQuestions(List<Integer> questionIds);
-    ResponseEntity<List<QuestionDTO>> getQuizQuestions(Integer id);
-    ResponseEntity<Integer> calculateResult(List<Response> responses);
+    List<Quiz> getAllQuiz();
+    Quiz getQuizById(Integer id);
+    String addQuiz(String category, Integer numQ, String title);
+    String updateQuizQuestions(List<Integer> questionIds);
+    List<QuestionDTO> getQuizQuestions(Integer id);
+    Integer calculateResult(List<Response> responses);
 }

@@ -31,34 +31,34 @@ public class QuizServiceImpl implements QuizService {
     private final StreamBridge  streamBridge;
 
     @Override
-    public ResponseEntity<List<Quiz>> getAllQuiz() {
-        return new ResponseEntity<>(quizRepository.findAll(), HttpStatus.OK);
+    public List<Quiz> getAllQuiz() {
+        return quizRepository.findAll();
     }
 
     @Override
-    public ResponseEntity<Quiz> getQuizById(Integer id) {
+    public Quiz getQuizById(Integer id) {
         Optional<Quiz> quiz = quizRepository.findById(id);
         if (!quiz.isPresent()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return null;
         }
-        else return new ResponseEntity<>(quiz.get(), HttpStatus.OK);
+        else return quiz.get();
     }
 
     @Override
-    public ResponseEntity<String> addQuiz(String category, Integer numQ, String title) {
+    public String addQuiz(String category, Integer numQ, String title) {
         Quiz quiz = new Quiz();
         quiz.setTitle(title);
         quizRepository.save(quiz);
 
         notifyAddNewQuiz(new QuizDTO(category, numQ, title));
 
-        return new ResponseEntity<>("Quiz Added Successfully", HttpStatus.CREATED);
+        return "Quiz Added Successfully";
     }
 
     @Override
-    public ResponseEntity<String> updateQuizQuestions(List<Integer> questionIds) {
+    public String updateQuizQuestions(List<Integer> questionIds) {
         log.info("Adding these questions: {}", questionIds);
-        return new ResponseEntity<>("Quiz Question set updated Successfully", HttpStatus.CREATED);
+        return "Quiz Question set updated Successfully";
     }
 
     private void notifyAddNewQuiz(QuizDTO quizDTO) {
@@ -68,18 +68,18 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public ResponseEntity<List<QuestionDTO>> getQuizQuestions(Integer id) {
+    public List<QuestionDTO> getQuizQuestions(Integer id) {
         Quiz quiz = quizRepository.findById(id).get();
         List<Integer> questionIds = quiz.getQuestionIds();
         List<QuestionDTO> questionDTOS = questionInterface.getQuestionsByIds(questionIds).getBody();
 
-        return new ResponseEntity<>(questionDTOS, HttpStatus.OK);
+        return questionDTOS;
     }
 
     @Override
-    public ResponseEntity<Integer> calculateResult(List<Response> responses) {
+    public Integer calculateResult(List<Response> responses) {
         int rightAnswers = 0;
         rightAnswers = questionInterface.getScore(responses).getBody();
-        return new ResponseEntity<>(rightAnswers, HttpStatus.OK);
+        return rightAnswers;
     }
 }
