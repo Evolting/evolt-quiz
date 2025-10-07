@@ -36,12 +36,12 @@ spring:
 
 eureka:
   instance:
-    preferIpAddress: true
+    preferIpAddress: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS:true}
   client:
-    fetchRegistry: true
-    registerWithEureka: true
+    fetchRegistry: ${EUREKA_CLIENT_FETCH_REGISTRY:true}
+    registerWithEureka: ${EUREKA_CLIENT_REGISTER_WITH_EUREKA:true}
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
 
 h2:
   console:

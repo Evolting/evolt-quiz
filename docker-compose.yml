@@ -11,9 +11,9 @@ services:
       retries: 5
       start_period: 30s
     environment:
-      eureka.instance.hostname: service-registry
-      eureka.client.fetch-registry: "false"
-      eureka.client.register-with-eureka: "false"
+      EUREKA_INSTANCE_HOSTNAME: service-registry
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
 
   api-gateway:
     image: api-gateway:v1
@@ -24,8 +24,10 @@ services:
       service-registry:
         condition: service_healthy
     environment:
-      eureka.client.serviceUrl.defaultZone: http://service-registry:8761/eureka/
-      eureka.client.register-with-eureka: "true"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
 
   question-service:
     image: question-service:v1
@@ -50,10 +52,10 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
 
       # Eureka/Service Registry Configuration
-      eureka.client.serviceUrl.defaultZone: http://service-registry:8761/eureka/
-      eureka.client.registerWithEureka: "true"
-      eureka.client.fetchRegistry: "true"
-      eureka.instance.preferIpAddress: "true"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
 
       # Kafka/Cloud Stream Configuration
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
@@ -84,10 +86,10 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
 
       # Eureka/Service Registry Configuration
-      eureka.client.serviceUrl.defaultZone: http://service-registry:8761/eureka/
-      eureka.client.registerWithEureka: "true"
-      eureka.client.fetchRegistry: "true"
-      eureka.instance.preferIpAddress: "true"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
 
       # Kafka/Cloud Stream Configuration
       SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
