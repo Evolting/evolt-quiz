@@ -21,10 +21,10 @@ public class UserServiceImpl implements UserService {
         this.roleRepository = roleRepository;
     }
 
+    @Cacheable(value = "users", key = "#username")
     @Override
     public User findByUsername(String username) {
         User user = userRepository.findByUsername(username);
-        log.info("Finding user by username: {} -> {}", username, user.toString());
         return user;
     }
 

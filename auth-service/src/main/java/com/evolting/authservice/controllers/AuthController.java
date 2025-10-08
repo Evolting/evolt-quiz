@@ -3,15 +3,16 @@ package com.evolting.authservice.controllers;
 import com.evolting.authservice.entities.User;
 import com.evolting.authservice.services.UserService;
 import com.evolting.authservice.services.impl.JwtService;
+import com.evolting.authservice.services.impl.MyUserDetailsService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -19,6 +20,8 @@ public class AuthController {
     private UserService userService;
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private MyUserDetailsService myUserDetailsService;
     @Autowired
     private AuthenticationManager authenticationManager;
 
@@ -39,5 +42,13 @@ public class AuthController {
             return jwtService.generateToken(user.getUsername());
         }
         return "Login Failed";
+    }
+
+    @GetMapping("/validate")
+    public boolean validateToken(@RequestHeader("Authorization") String token) {
+        token = token.substring(7);
+        String userName = jwtService.extractUserName(token);
+        UserDetails userDetails = myUserDetailsService.loadUserByUsername(userName);
+        return jwtService.validateToken(token, userDetails);
     }
 }
