@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+@Slf4j
 @Service
 public class JwtService {
 
@@ -71,9 +74,19 @@ public class JwtService {
                 .build().parseClaimsJws(token).getBody();
     }
 
+    @Cacheable(value = "jwt-cache", key = "#token")
     public boolean validateToken(String token, UserDetails userDetails) {
+        // 1. Check if the token is expired (now only runs on Cache Miss)
+        if (isTokenExpired(token)) {
+            // If expired, the token is invalid.
+            return false;
+        }
+
+        // 2. If not expired, perform the username validation
         final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
+
+        // The result 'true' or 'false' (based on user validation) is cached
+        return userName.equals(userDetails.getUsername());
     }
 
     private boolean isTokenExpired(String token) {
