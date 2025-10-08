@@ -29,10 +29,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String register(User user) {
+    public Boolean register(User user) {
+        if (findByUsername(user.getUsername()) != null) {
+            return false;
+        }
         user.setPassword(encoder.encode(user.getPassword()));
         user.setRole(roleRepository.findById(1).get());
         userRepository.save(user);
-        return "Register done";
+        return true;
     }
 }

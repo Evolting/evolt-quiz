@@ -6,6 +6,8 @@ import com.evolting.authservice.services.impl.JwtService;
 import com.evolting.authservice.services.impl.MyUserDetailsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -31,24 +33,24 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
-        return userService.register(user);
+    public ResponseEntity<String> register(@RequestBody User user) {
+        return new ResponseEntity<>(userService.register(user) ? "User is registered" : "Registration failed", HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody User user) {
+    public ResponseEntity<String> login(@RequestBody User user) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
         if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(user.getUsername());
+            return new ResponseEntity<>(jwtService.generateToken(user.getUsername()), HttpStatus.OK);
         }
-        return "Login Failed";
+        return new ResponseEntity<>("Login Failed", HttpStatus.UNAUTHORIZED);
     }
 
     @GetMapping("/validate")
-    public boolean validateToken(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String token) {
         token = token.substring(7);
         String userName = jwtService.extractUserName(token);
         UserDetails userDetails = myUserDetailsService.loadUserByUsername(userName);
-        return jwtService.validateToken(token, userDetails);
+        return new ResponseEntity<>(jwtService.validateToken(token, userDetails), HttpStatus.OK);
     }
 }
