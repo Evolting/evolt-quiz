@@ -29,6 +29,40 @@ services:
       EUREKA_CLIENT_FETCH_REGISTRY: "true"
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
 
+  auth-service:
+    image: auth-service:v1
+    container_name: auth-service
+    ports:
+      - 8050:8050
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      auth-service-db:
+        condition: service_started
+    environment:
+      # Database Configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-service-db:5434/authdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      # Eureka/Service Registry Configuration
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+
+      # Kafka/Cloud Stream Configuration
+      SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:9092
+
+      # Application Name
+      SPRING_APPLICATION_NAME: auth-service
+
   question-service:
     image: question-service:v1
     container_name: question-service
@@ -96,6 +130,16 @@ services:
 
       # Application Name
       SPRING_APPLICATION_NAME: quiz-service
+
+  auth-service-db:
+    image: postgres:14-alpine
+    container_name: auth-service-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: authdb
+    ports:
+      - 5434:5432
 
   question-service-db:
     image: postgres:14-alpine
