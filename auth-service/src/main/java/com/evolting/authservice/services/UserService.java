@@ -4,5 +4,5 @@ import com.evolting.authservice.entities.User;
 
 public interface UserService {
     User findByUsername(String username);
-    Boolean register(User user);
+    User register(User user);
 }

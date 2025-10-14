@@ -5,12 +5,15 @@ import dev.evolting.questionservice.entities.Question;
 import dev.evolting.questionservice.entities.Response;
 import dev.evolting.questionservice.services.QuestionService;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/question")
 public class QuestionController {
@@ -32,6 +35,7 @@ public class QuestionController {
     }
 
     @RateLimiter(name = "addQuestion", fallbackMethod = "addQuestionFallback")
+    @PreAuthorize("hasAuthority('CREATE_QUESTIONS')")
     @PostMapping
     public ResponseEntity<String> addQuestion(@RequestBody Question question) {
         return new ResponseEntity<>(questionService.addQuestion(question), HttpStatus.CREATED);

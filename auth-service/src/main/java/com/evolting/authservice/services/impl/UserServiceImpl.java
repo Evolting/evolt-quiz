@@ -1,5 +1,6 @@
 package com.evolting.authservice.services.impl;
 
+import com.evolting.authservice.entities.Role;
 import com.evolting.authservice.entities.User;
 import com.evolting.authservice.repositories.RoleRepository;
 import com.evolting.authservice.repositories.UserRepository;
@@ -8,6 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -29,13 +34,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Boolean register(User user) {
+    public User register(User user) {
         if (findByUsername(user.getUsername()) != null) {
-            return false;
+            return null;
         }
         user.setPassword(encoder.encode(user.getPassword()));
-        user.setRole(roleRepository.findById(1).get());
-        userRepository.save(user);
-        return true;
+        Set<Role> roles = new HashSet<>();
+        Random random = new Random();
+        if(random.nextInt() % 2 == 0) {
+            roles.add(roleRepository.findById(2).get());
+        }
+        else roles.add(roleRepository.findById(1).get());
+        user.setRoles(roles);
+        User savedUser = userRepository.save(user);
+        return savedUser;
     }
 }

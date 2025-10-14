@@ -33,8 +33,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
-        return new ResponseEntity<>(userService.register(user) ? "User is registered" : "Registration failed", HttpStatus.CREATED);
+    public ResponseEntity<User> register(@RequestBody User user) {
+        return new ResponseEntity<>(userService.register(user), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
@@ -46,11 +46,17 @@ public class AuthController {
         return new ResponseEntity<>("Login Failed", HttpStatus.UNAUTHORIZED);
     }
 
-    @GetMapping("/validate")
-    public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String token) {
-        token = token.substring(7);
-        String userName = jwtService.extractUserName(token);
-        UserDetails userDetails = myUserDetailsService.loadUserByUsername(userName);
-        return new ResponseEntity<>(jwtService.validateToken(token, userDetails), HttpStatus.OK);
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+
+            jwtService.invalidateToken(token);
+
+            return ResponseEntity.ok("Successfully logged out and token revoked.");
+        }
+
+        return ResponseEntity.badRequest().body("Missing or invalid Authorization header.");
     }
 }
